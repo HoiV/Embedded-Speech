@@ -171,9 +171,10 @@ shared_ptr<EmbeddedSpeechConfig> CreateEmbeddedSpeechConfig()
     // Enable Speech SDK logging. If you want to report an issue, include this log with the report.
     // If no path is specified, the log file will be created in the program default working folder.
     // If a path is specified, make sure that it is writable by the application process.
-    /*
+
+    // =============== Enable LOGGING ================
     config->SetProperty(PropertyId::Speech_LogFilename, "SpeechSDK.log");
-    */
+    // =============== Enable LOGGING ================
 
     if (!SpeechRecognitionModelName.empty())
     {
