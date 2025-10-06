@@ -26,6 +26,7 @@ extern void EmbeddedIntentRecognitionWithKeywordFromMicrophone();
 
 extern void ListEmbeddedSpeechSynthesisVoices();
 extern void EmbeddedSpeechSynthesisToSpeaker();
+extern void EmbeddedSpeechSynthesisShortTextToSpeaker();
 extern void HybridSpeechSynthesisToSpeaker();
 
 extern void ListEmbeddedSpeechTranslationModels();
@@ -61,12 +62,13 @@ int main()
             cout << "\nSpeech synthesis\n";
             cout << "10. List embedded speech synthesis voices.\n";
             cout << "11. Embedded speech synthesis with speaker output.\n";
-            cout << "12. Hybrid (cloud & embedded) speech synthesis with speaker output.\n";
+            cout << "12. Embedded speech synthesis of short text with speaker output.\n";
+            cout << "13. Hybrid (cloud & embedded) speech synthesis with speaker output.\n";
             cout << "\nSpeech translation\n";
-            cout << "13. List embedded speech translation models.\n";
-            cout << "14. Embedded speech translation with microphone input.\n";
+            cout << "14. List embedded speech translation models.\n";
+            cout << "15. Embedded speech translation with microphone input.\n";
             cout << "\nDevice performance measurement\n";
-            cout << "15. Embedded speech recognition.\n";
+            cout << "16. Embedded speech recognition.\n";
             cout << "\nChoose a number (or none for exit) and press Enter: ";
             cout.flush();
 
@@ -114,15 +116,18 @@ int main()
                 if (HasSpeechSynthesisVoice()) EmbeddedSpeechSynthesisToSpeaker();
                 break;
             case 12:
-                if (HasSpeechSynthesisVoice()) HybridSpeechSynthesisToSpeaker();
+                if (HasSpeechSynthesisVoice()) EmbeddedSpeechSynthesisShortTextToSpeaker();
                 break;
             case 13:
-                ListEmbeddedSpeechTranslationModels();
+                if (HasSpeechSynthesisVoice()) HybridSpeechSynthesisToSpeaker();
                 break;
             case 14:
-                if (HasSpeechTranslationModel()) EmbeddedSpeechTranslationFromMicrophone();
+                ListEmbeddedSpeechTranslationModels();
                 break;
             case 15:
+                if (HasSpeechTranslationModel()) EmbeddedSpeechTranslationFromMicrophone();
+                break;
+            case 16:
                 if (HasSpeechRecognitionModel()) EmbeddedSpeechRecognitionPerformanceTest();
                 break;
             default:

@@ -179,6 +179,108 @@ void SynthesizeSpeech(shared_ptr<SpeechSynthesizer> synthesizer)
 }
 
 
+void SynthesizeSpeechFromShortText(shared_ptr<SpeechSynthesizer> synthesizer)
+{
+    // Subscribes to events.
+    synthesizer->SynthesisStarted += [](const SpeechSynthesisEventArgs& e)
+        {
+            UNUSED(e);
+            cout << "Synthesis started." << endl;
+        };
+
+    synthesizer->Synthesizing += [](const SpeechSynthesisEventArgs& e)
+        {
+            cout << "Synthesizing, received an audio chunk of " << e.Result->GetAudioLength() << " bytes." << endl;
+        };
+
+    synthesizer->WordBoundary += [](const SpeechSynthesisWordBoundaryEventArgs& e)
+        {
+            cout << "Word \"" << e.Text << "\" | "
+                << "Text offset " << e.TextOffset << " | "
+                // Unit of AudioOffset is tick (1 tick = 100 nanoseconds).
+                << "Audio offset " << (e.AudioOffset + 5000) / 10000 << "ms"
+                << endl;
+        };
+
+    std::vector<string> texts = {
+        "Hey Mara! How you doing? Today is such a beautiful day outside. Have you seen the sun?",
+        "I also found a camera in the plant pot next to the sofa in the gallery room.",
+        "I hope you have great time with the doctor yesterday and I hope your session went well."
+        "Hello, this recording is done to test our speech recognition system. We now have an offline speech recognition engine capable of running on low resource devices. We invite you to give it a try."
+    };
+
+    for (string text : texts) 
+    {
+
+        // Synthesizes text to speech.
+        auto result = synthesizer->SpeakTextAsync(text).get();
+
+        // To adjust the rate or volume, use SpeakSsmlAsync with prosody tags instead of SpeakTextAsync.
+        /*
+        const auto ssmlSynthBegin = "<speak version='1.0' xml:lang='en-US' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts'>";
+        const auto ssmlSynthEnd = "</speak>";
+        stringstream ssml;
+
+        // Range of rate is -100% to 100%, 100% means 2x faster.
+        ssml << ssmlSynthBegin << "<prosody rate='50%'>" << text << "</prosody>" << ssmlSynthEnd;
+        std::cout << "Synthesizing with rate +50%" << endl;
+        auto result1 = synthesizer->SpeakSsmlAsync(ssml.str()).get();
+        ssml.str("");
+
+        // Range of volume is -100% to 100%, 100% means 2x louder.
+        ssml << ssmlSynthBegin << "<prosody volume='50%'>" << text << "</prosody>" << ssmlSynthEnd;
+        std::cout << "Synthesizing with volume +50%" << endl;
+        auto result2 = synthesizer->SpeakSsmlAsync(ssml.str()).get();
+        */
+
+        if (result->Reason == ResultReason::SynthesizingAudioCompleted)
+        {
+            cout << "Synthesis completed for text \"" << text << "\"" << endl;
+
+            // See where the result came from, cloud (online) or embedded (offline)
+            // speech synthesis.
+            // This can change during a session where HybridSpeechConfig is used.
+            /*
+            cout << "Synthesis backend: " << result->Properties.GetProperty(PropertyId::SpeechServiceResponse_SynthesisBackend) << endl;
+            */
+
+            // To save the output audio to a WAV file:
+            /*
+            auto audioDataStream = AudioDataStream::FromResult(result);
+            audioDataStream->SaveToWavFile("SynthesizedSpeech.wav");
+            */
+
+            // To read the output audio for e.g. processing it in memory:
+            /*
+            audioDataStream->SetPosition(0); // reset the stream position
+
+            vector<uint8_t> buffer(16000);
+            uint32_t readBytes = 0;
+            uint32_t totalBytes = 0;
+
+            while ((readBytes = audioDataStream->ReadData(buffer.data(), static_cast<uint32_t>(buffer.size()))) > 0)
+            {
+                cout << "Read " << readBytes << " bytes" << endl;
+                totalBytes += readBytes;
+            }
+            cout << "Total " << totalBytes << " bytes" << endl;
+            */
+        }
+        else if (result->Reason == ResultReason::Canceled)
+        {
+            auto cancellation = SpeechSynthesisCancellationDetails::FromResult(result);
+            cout << "CANCELED: Reason=" << int(cancellation->Reason) << endl;
+
+            if (cancellation->Reason == CancellationReason::Error)
+            {
+                cerr << "CANCELED: ErrorCode=" << int(cancellation->ErrorCode) << endl;
+                cerr << "CANCELED: ErrorDetails=\"" << cancellation->ErrorDetails << "\"" << endl;
+            }
+        }
+    }
+}
+
+
 // Synthesizes speech using embedded speech config and the system default speaker device.
 void EmbeddedSpeechSynthesisToSpeaker()
 {
@@ -187,6 +289,17 @@ void EmbeddedSpeechSynthesisToSpeaker()
 
     auto synthesizer = SpeechSynthesizer::FromConfig(speechConfig, audioConfig);
     SynthesizeSpeech(synthesizer);
+}
+
+
+// Synthesizes speech using embedded speech config and the system default speaker device.
+void EmbeddedSpeechSynthesisShortTextToSpeaker()
+{
+    auto speechConfig = CreateEmbeddedSpeechConfig();
+    auto audioConfig = AudioConfig::FromDefaultSpeakerOutput();
+
+    auto synthesizer = SpeechSynthesizer::FromConfig(speechConfig, audioConfig);
+    SynthesizeSpeechFromShortText(synthesizer);
 }
 
 
